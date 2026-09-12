@@ -321,7 +321,7 @@ const getDungeonClearCount = (dungeon) => {
 
 const getDungeonSize = (dungeon, clears) => {
     const baseSize = GameConstants.BASE_DUNGEON_SIZE + dungeonList[dungeon].difficulty;
-    const reduction = Math.max(0, clears.toString().length - 1);
+    const reduction = Math.max(0, Math.floor(Math.log10(clears)));
     return Math.max(GameConstants.MIN_DUNGEON_SIZE, baseSize - reduction);
 };
 // Display dungeons with multiple floors as YF + NxN
