@@ -281,11 +281,14 @@ const getDungeonData = ko.pureComputed(() => {
         d.dungeons = d.dungeons.map(dungeon => {
             const clears = getDungeonClearCount(dungeon);
             const cost = getDungeonTokenCost(dungeon, clears);
+            const currentSize = getDungeonSize(dungeon, clears);
             const pokemonList = getDungeonPokemon(dungeon);
             const pokemonNames = pokemonList.map(p => p.pokemon);
             const data = {
                 name: dungeon,
                 clears: clears,
+                currentSize: currentSize,
+                currentSizeDisplay: formatDungeonSize(currentSize),
                 cost: cost,
                 cost500: getDungeonTokenCostRange(dungeon, 0, 500),
                 remaining: getDungeonTokenCostRange(dungeon, Math.min(clears, 500), 500),
@@ -314,6 +317,24 @@ const getDungeonClearCount = (dungeon) => {
 
     const dungeonIndex = GameConstants.getDungeonIndex(dungeon);
     return SaveData.file().save.statistics.dungeonsCleared[dungeonIndex] || 0;
+};
+
+const getDungeonSize = (dungeon, clears) => {
+    const baseSize = GameConstants.BASE_DUNGEON_SIZE + dungeonList[dungeon].difficulty;
+    const reduction = Math.max(0, clears.toString().length - 1);
+    return Math.max(GameConstants.MIN_DUNGEON_SIZE, baseSize - reduction);
+};
+// Display dungeons with multiple floors as YF + NxN
+// Where Y is the number of complete floors and N is the size of the top floor
+// So a dungeon that is 10x10 + 8x8 will be 1F + 8x8
+// and a hypothetical future dungeon that is 10x10 + 10x10 + 6x6 would be 2F + 6x6
+const formatDungeonSize = (size) => {
+    if (size <= GameConstants.MAX_DUNGEON_SIZE) {
+        return `${size}x${size}`;
+    }
+    floorCount = Math.floor((size - GameConstants.MIN_DUNGEON_SIZE) / (GameConstants.MAX_DUNGEON_SIZE - GameConstants.MIN_DUNGEON_SIZE + 1));
+    topFloorSize = (size - GameConstants.MIN_DUNGEON_SIZE) % (GameConstants.MAX_DUNGEON_SIZE - GameConstants.MIN_DUNGEON_SIZE + 1) + GameConstants.MIN_DUNGEON_SIZE;
+    return `${floorCount}F + ${topFloorSize}x${topFloorSize}`;
 };
 
 // Mirrors Dungeon.tokenCost, but using the clear count from the save data.
